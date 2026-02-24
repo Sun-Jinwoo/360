@@ -37,6 +37,9 @@ public class MovePlayer : MonoBehaviour
     //variable para conectar con el animador
     private Animator animator;
 
+    // Agrega estas dos propiedades al final de las variables, antes de Awake()
+    public bool IsMoving => moveInput.magnitude > 0.1f;
+    public bool IsRunning => isRun;
     private void Awake()
     {
         inputActions = new NIA();

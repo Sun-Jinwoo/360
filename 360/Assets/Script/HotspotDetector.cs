@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class HotspotDetector : MonoBehaviour
@@ -13,56 +14,27 @@ public class HotspotDetector : MonoBehaviour
     public Hotspot360[] hotspots;
 
     private Hotspot360 hotspotActual = null;
-
-    // InputAction directo para el clic
     private InputAction clickAction;
 
     private void Awake()
     {
-        // Crea la acción de clic directamente en código
         clickAction = new InputAction(type: InputActionType.Button, binding: "<Mouse>/leftButton");
         clickAction.performed += OnClick;
     }
 
-    private void OnEnable()
-    {
-        clickAction.Enable();
-    }
-
-    private void OnDisable()
-    {
-        clickAction.Disable();
-    }
-
+    private void OnEnable() { clickAction.Enable(); }
+    private void OnDisable() { clickAction.Disable(); }
     private void OnDestroy()
     {
         clickAction.performed -= OnClick;
         clickAction.Dispose();
     }
 
-    private void OnClick(InputAction.CallbackContext context)
-    {
-        Debug.Log($"??? Clic detectado | HotspotActual: {(hotspotActual != null ? hotspotActual.name : "NINGUNO")}");
-
-        if (hotspotActual != null)
-        {
-            CambiarEsfera();
-        }
-        else
-        {
-            Debug.LogWarning("?? Clic pero no hay hotspot activo — ¿estás mirando al punto?");
-        }
-    }
-
     private void Start()
     {
         if (hotspotPanel == null) Debug.LogError("? Falta HotspotPanel");
-        if (labelDescripcion == null) Debug.LogError("? Falta LabelDescripcion");
-        if (labelClick == null) Debug.LogError("? Falta LabelClick");
         if (hotspots == null || hotspots.Length == 0) Debug.LogWarning("?? No hay hotspots");
-
-        if (hotspotPanel != null)
-            hotspotPanel.SetActive(false);
+        if (hotspotPanel != null) hotspotPanel.SetActive(false);
     }
 
     private void Update()
@@ -82,8 +54,6 @@ public class HotspotDetector : MonoBehaviour
 
             Vector3 direccion = (h.transform.position - transform.position).normalized;
             float angulo = Vector3.Angle(transform.forward, direccion);
-
-            Debug.Log($"Hotspot: {h.name} | Ángulo: {angulo:F1}° | Activación: {h.anguloActivacion}°");
 
             if (angulo < h.anguloActivacion)
             {
@@ -110,21 +80,19 @@ public class HotspotDetector : MonoBehaviour
         }
     }
 
-    private void CambiarEsfera()
+    private void OnClick(InputAction.CallbackContext context)
     {
-        Debug.Log($"?? Cambiando esfera...");
-        Debug.Log($"   SphereActual:  {(hotspotActual.sphereActual != null ? hotspotActual.sphereActual.name : "NO ASIGNADA ?")}");
-        Debug.Log($"   SphereDestino: {(hotspotActual.sphereDestino != null ? hotspotActual.sphereDestino.name : "NO ASIGNADA ?")}");
+        if (hotspotActual == null) return;
 
-        if (hotspotActual.sphereActual != null)
-            hotspotActual.sphereActual.SetActive(false);
+        string escena = hotspotActual.escenaDestino;
 
-        if (hotspotActual.sphereDestino != null)
-            hotspotActual.sphereDestino.SetActive(true);
+        if (string.IsNullOrEmpty(escena))
+        {
+            Debug.LogError("? El campo 'Escena Destino' está vacío en el Hotspot");
+            return;
+        }
 
-        if (hotspotPanel != null)
-            hotspotPanel.SetActive(false);
-
-        hotspotActual = null;
+        Debug.Log($"?? Cargando escena: {escena}");
+        SceneManager.LoadScene(escena);
     }
 }
